@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>正方体折纸模拟器</title>
+<style>
+:root{
+  --bg0:#0b0e12; --panel:rgba(22,27,34,.86); --line:rgba(255,255,255,.09);
+  --text:#e9eef5; --dim:#8fa0b3; --accent:#4aa8ff;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:radial-gradient(900px 700px at 62% -10%,#1d2735 0%,#111721 48%,var(--bg0) 100%);
+  color:var(--text);
+  font:14px/1.55 "Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+}
+#cv{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#cv.grabbing{cursor:grabbing}
+#cv.brush{cursor:crosshair}
+.hdr{position:fixed;left:22px;top:18px;pointer-events:none}
+.hdr h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.06em}
+.hdr p{margin:5px 0 0;font-size:12px;color:var(--dim)}
+.panel{position:fixed;top:16px;right:16px;width:280px;padding:14px 14px 12px;border-radius:18px;
+  background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(16px);
+  box-shadow:0 24px 60px rgba(0,0,0,.5);max-height:calc(100vh - 32px);overflow:auto}
+.panel::-webkit-scrollbar{width:6px}
+.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+.grp+.grp{margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+.lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--dim);letter-spacing:.04em;margin-bottom:8px}
+.lbl b{color:var(--text);font-weight:600;font-size:13px;letter-spacing:0}
+.lbl2{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--dim);margin:2px 0 5px}
+.lbl2 .hint{font-size:11px;opacity:.8}
+.nets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.netbtn{display:flex;align-items:center;justify-content:center;height:54px;padding:5px;border-radius:12px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);transition:.16s}
+.netbtn:hover{background:rgba(255,255,255,.1)}
+.netbtn.on{border-color:var(--accent);background:rgba(74,168,255,.16);box-shadow:0 0 0 1px rgba(74,168,255,.35) inset}
+.netbtn svg{display:block;overflow:visible}
+.netbtn rect{fill:rgba(240,232,214,.85);stroke:rgba(0,0,0,.22);stroke-width:.5}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(90deg,rgba(74,168,255,.8),rgba(255,255,255,.16))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-5.5px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:rgba(255,255,255,.2)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border:none;border-radius:50%;background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+button{font:inherit;font-size:12.5px;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);transition:.16s}
+button:hover{background:rgba(255,255,255,.15)}
+button.primary{background:linear-gradient(180deg,#4aa8ff,#2f7fd6);border-color:rgba(120,190,255,.5);color:#06121f;font-weight:600}
+button.primary:hover{filter:brightness(1.08)}
+button.wide{width:100%;margin-top:8px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.seg button{padding:7px 2px;font-size:12px}
+.seg button.on{border-color:var(--accent);background:rgba(74,168,255,.22);color:#eaf5ff;font-weight:600}
+.stamps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:9px 0 4px}
+.stampbtn{height:32px;padding:0;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+.stampbtn.on{border-color:var(--accent);background:rgba(74,168,255,.25);color:#eaf5ff;font-weight:700}
+.views{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:2px}
+.views button{padding:6px 2px;font-size:12px}
+.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:2px 0 7px}.cell{aspect-ratio:1;border-radius:7px;border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.04);cursor:pointer;transition:.12s;padding:0}
+.cell:hover{background:rgba(255,255,255,.13)}
+.cell.on{background:rgba(240,232,214,.88);border-color:rgba(255,255,255,.4)}
+.status{font-size:11.5px;line-height:1.45;color:var(--dim)}
+.status.ok{color:#6fd39a}
+.status.bad{color:#ff9166}
+.swatches{display:flex;gap:9px;margin:10px 0 6px;padding-left:1px}
+.sw{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.22);transition:.15s}
+.sw:hover{transform:scale(1.1)}
+.sw.on{border-color:#fff;box-shadow:0 0 0 3px rgba(74,168,255,.4)}
+.chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#cfdae7;padding:4px 0;cursor:pointer}
+.chk input{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:5px;
+  border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.06);position:relative;cursor:pointer;transition:.15s}
+.chk input:checked{background:var(--accent);border-color:var(--accent)}
+.chk input:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:4px;height:8px;
+  border:solid #06121f;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.tip{margin-top:11px;padding:9px 10px;border-radius:10px;font-size:12px;line-height:1.5;color:#a9bacd;
+  background:rgba(74,168,255,.08);border:1px solid rgba(74,168,255,.18);min-height:50px;transition:border-color .2s}
+.tip b{color:#e9f3ff}
+@media (max-width:760px){
+  .panel{top:auto;bottom:10px;right:10px;left:10px;width:auto;max-height:54vh;border-radius:16px}
+  .hdr{left:14px;top:12px}
+  .nets{grid-template-columns:repeat(6,1fr);gap:6px}
+  .netbtn{height:46px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="hdr">
+  <h1>正方体折纸模拟器</h1>
+  <p>拖动旋转 · 滚轮缩放 · 点面看相对面/定基准面 · 点折痕圆点单折 · 画笔可在纸上作画</p>
+</div>
+
+<div class="panel">
+  <div class="grp">
+    <div class="lbl"><span>展开图</span><b id="netName">十字形</b></div>
+    <div class="nets" id="nets"></div>
+    <button id="btnCustom" class="wide">自定义展开图…</button>
+    <div id="customBox" hidden>
+      <div class="grid6" id="grid6"></div>
+      <div class="status" id="netStatus"></div>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl"><span>折叠角度</span><b id="foldLbl">全部折痕</b></div>
+    <input id="fold" type="range" min="0" max="90" step="0.5" value="0" aria-label="折叠角度">
+    <div class="lbl2"><span id="ang">0°</span><span class="hint">点圆点可只折一条</span></div>
+    <div class="row">
+      <button id="btnFlat">展开</button>
+      <button id="btnCube" class="primary">折起</button>
+    </div>
+    <div class="row">
+      <button id="btnPlay">▶ 往复播放</button>
+      <button id="btnAll">全部折痕</button>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl"><span>相对面</span><b id="pairLbl">—</b></div>
+    <label class="chk"><input type="checkbox" id="optPair"><span>三组相对面各涂一色</span></label>
+    <div class="status" id="pairHint" style="margin:4px 0 8px"></div>
+    <button id="btnDice" class="wide">一键标骰子（对面和为 7）</button>
+  </div>
+
+  <div class="grp">
+    <div class="lbl"><span>基准面</span><b id="baseLbl">第 1 面 · 正面</b></div>
+    <div class="row">
+      <button id="baseFront">作为正面</button>
+      <button id="baseGround">作为地面</button>
+    </div>
+    <div class="lbl2"><span class="hint">先点一个面，再选它的角色；基准面折叠时不动</span></div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl"><span>工具</span><b id="modeLbl">浏览</b></div>
+    <div class="seg">
+      <button id="modeView" class="on">浏览</button>
+      <button id="modeBrush">画笔</button>
+      <button id="modeErase">橡皮</button>
+      <button id="modeStamp">印章</button>
+    </div>
+    <div id="stampBox" hidden>
+      <div class="stamps" id="stamps"></div>
+      <div class="lbl2"><span class="hint">点面盖章 · 右键转 90° · 数字键 1–6</span></div>
+    </div>
+    <div id="penBox">
+      <div class="swatches" id="swatches"></div>
+      <div class="lbl2"><span>笔画粗细</span><span class="hint" id="penVal">4</span></div>
+      <input id="pen" type="range" min="1" max="10" step="1" value="4" aria-label="笔画粗细">
+    </div>
+    <div class="row">
+      <button id="btnUndo">撤销</button>
+      <button id="btnClearFace">清空此面</button>
+    </div>
+    <button id="btnClearAll" class="wide">清空全部笔迹与印章</button>
+  </div>
+
+  <div class="grp">
+    <div class="lbl"><span>选项</span></div>
+    <label class="chk"><input type="checkbox" id="optNum" checked><span>显示面的编号</span></label>
+    <label class="chk"><input type="checkbox" id="optKnob" checked><span>显示折痕手柄</span></label>
+    <label class="chk"><input type="checkbox" id="optSpin"><span>自动旋转</span></label>
+    <label class="chk"><input type="checkbox" id="optDir"><span>反向折叠（纸背面朝外）</span></label>
+    <div class="lbl2"><span class="hint">视角（双击空白处可复位）</span></div>
+    <div class="views" id="views"></div>
+    <button id="btnReset" class="wide">重置视角</button>
+  </div>
+
+  <div class="tip" id="tip"></div>
+</div>
+
+<script>
+'use strict';
+
+/* =========================================================================
+   1. 迷你 3D 数学（行主序 3×3 矩阵 + 平移）
+   ========================================================================= */
+const DEG = Math.PI / 180;
+const I3 = [1,0,0, 0,1,0, 0,0,1];
+
+const mm = (A, B) => {
+  const C = new Array(9);
+  for (let r = 0; r < 3; r++)
+    for (let c = 0; c < 3; c++)
+      C[r*3+c] = A[r*3]*B[c] + A[r*3+1]*B[3+c] + A[r*3+2]*B[6+c];
+  return C;
+};
+const mv = (A, p) => [
+  A[0]*p[0] + A[1]*p[1] + A[2]*p[2],
+  A[3]*p[0] + A[4]*p[1] + A[5]*p[2],
+  A[6]*p[0] + A[7]*p[1] + A[8]*p[2]
+];
+const vadd = (a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+const vsub = (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+const vdot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const vlen = a => Math.hypot(a[0], a[1], a[2]);
+const vnorm = a => { const l = vlen(a) || 1; return [a[0]/l, a[1]/l, a[2]/l]; };
+const rx = a => { const c = Math.cos(a), s = Math.sin(a); return [1,0,0, 0,c,-s, 0,s,c]; };
+const ry = a => { const c = Math.cos(a), s = Math.sin(a); return [c,0,s, 0,1,0, -s,0,c]; };
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const wrapPi = a => {
+  const t = (a + Math.PI) % (Math.PI * 2);
+  return (t < 0 ? t + Math.PI * 2 : t) - Math.PI;
+};
+
+/* 刚体变换 {R,t}：world = R·p + t */
+const comp = (A, B) => ({ R: mm(A.R, B.R), t: vadd(mv(A.R, B.t), A.t) });
+const TR  = v => ({ R: I3.slice(), t: [v[0], v[1], v[2]] });
+const ROT = (axis, ang) => ({ R: axis === 'x' ? rx(ang) : ry(ang), t: [0,0,0] });
+const xf  = (X, p) => vadd(mv(X.R, p), X.t);
+
+/* 3×3 求逆（行主序），奇异返回 null */
+function inv3(m) {
+  const [a,b,c,d,e,f,g,h,i] = m;
+  const A = e*i - f*h, B = f*g - d*i, C = d*h - e*g;
+  const D = c*h - b*i, E = a*i - c*g, F = b*g - a*h;
+  const G = b*f - c*e, H = c*d - a*f, I = a*e - b*d;
+  const det = a*A + b*B + c*C;
+  if (!isFinite(det) || Math.abs(det) < 1e-12) return null;
+  const k = 1 / det;
+  return [A*k, D*k, G*k, B*k, E*k, H*k, C*k, F*k, I*k];
+}
+
+/** 单位正方形 (0,0)(1,0)(1,1)(0,1) → 任意四边形 的单应矩阵（行主序 3×3） */
+function homography(q) {
+  const [p0, p1, p2, p3] = q;
+  const sx = p0[0] - p1[0] + p2[0] - p3[0];
+  const sy = p0[1] - p1[1] + p2[1] - p3[1];
+  let a, b, c, d, e, f, g = 0, h = 0;
+  if (Math.abs(sx) < 1e-9 && Math.abs(sy) < 1e-9) {
+    a = p1[0] - p0[0]; b = p3[0] - p0[0]; c = p0[0];
+    d = p1[1] - p0[1]; e = p3[1] - p0[1]; f = p0[1];
+  } else {
+    const dx1 = p1[0] - p2[0], dx2 = p3[0] - p2[0];
+    const dy1 = p1[1] - p2[1], dy2 = p3[1] - p2[1];
+    const den = dx1*dy2 - dx2*dy1;
+    if (Math.abs(den) < 1e-9) return null;
+    g = (sx*dy2 - dx2*sy) / den;
+    h = (dx1*sy - sx*dy1) / den;
+    a = p1[0] - p0[0] + g*p1[0]; b = p3[0] - p0[0] + h*p3[0]; c = p0[0];
+    d = p1[1] - p0[1] + g*p1[1]; e = p3[1] - p0[1] + h*p3[1]; f = p0[1];
+  }
+  return [a,b,c, d,e,f, g,h,1];
+}
+
+/* =========================================================================
+   2. 展开图 → 折叠树
+   每个面的局部坐标系都是单位正方形 [0,1]×[0,1]（z=0，正面朝 +z）。
+   每条折痕是父子面共用的那条棱，各自有独立的折叠角：
+        X_child = X_parent · T(hinge) · R(axis, ±θ_child) · T(off − hinge)
+   ========================================================================= */
+const DIRS = {
+  up:    { off: [ 0, 1, 0], hinge: [0.5, 1, 0], axis: 'x', sign: +1, edge: [[0,1,0], [1,1,0]] },
+  down:  { off: [ 0,-1, 0], hinge: [0.5, 0, 0], axis: 'x', sign: -1, edge: [[0,0,0], [1,0,0]] },
+  left:  { off: [-1, 0, 0], hinge: [0, 0.5, 0], axis: 'y', sign: +1, edge: [[0,0,0], [0,1,0]] },
+  right: { off: [ 1, 0, 0], hinge: [1, 0.5, 0], axis: 'y', sign: -1, edge: [[1,0,0], [1,1,0]] }
+};
+
+function parseNet(rows) {
+  const cells = [];
+  rows.forEach((row, ri) => [...row].forEach((ch, ci) => {
+    if (ch === '#') cells.push({ x: ci, y: rows.length - 1 - ri });
+  }));
+  return cells;
+}
+
+function buildNet(name, rows) {
+  const cells = parseNet(rows);
+  const key = (x, y) => x + ',' + y;
+  const index = new Map(cells.map((c, i) => [key(c.x, c.y), i]));
+  const nodes = cells.map((c, i) => ({ id: i, cell: c, children: [], fold: 0 }));
+  const seen = new Set([0]);
+  const queue = [0];
+  while (queue.length) {
+    const i = queue.shift();
+    const { x, y } = cells[i];
+    for (const [dx, dy, dir] of [[0,1,'up'], [0,-1,'down'], [-1,0,'left'], [1,0,'right']]) {
+      const j = index.get(key(x + dx, y + dy));
+      if (j === undefined || seen.has(j)) continue;
+      seen.add(j);
+      queue.push(j);
+      nodes[i].children.push({ dir, node: nodes[j] });
+    }
+  }
+  return { name, rows, cells, nodes, root: nodes[0], reached: seen.size, ink: new Map(), stamps: new Map() };
+}
+
+/* =========================================================================
+   2.5 展开图合法性判断（能不能折成正方体）
+   ========================================================================= */
+function validateNet(net) {
+  const cells = net ? net.cells : [];
+  if (cells.length !== 6) return { ok: false, why: 'count', msg: '需要正好 6 个面，现在有 ' + cells.length + ' 个' };
+  if (net.reached !== 6) return { ok: false, why: 'gap', msg: '这些面没有连成一整片（有孤岛）' };
+
+  const has = new Set(cells.map(c => c.x + ',' + c.y));
+  for (const c of cells) {
+    if (has.has((c.x + 1) + ',' + c.y) && has.has(c.x + ',' + (c.y + 1)) && has.has((c.x + 1) + ',' + (c.y + 1)))
+      return { ok: false, why: 'block', msg: '图里有 2×2 的方块，这种图折不出正方体' };
+  }
+
+  const seen = new Map();
+  const fs = facesOf(net, 90, 1);
+  let d1 = 0, d2 = 0, bad = 0;
+  for (let i = 0; i < fs.length; i++) {
+    for (let j = i + 1; j < fs.length; j++) {
+      const d = vlen(vsub(fs[j].center, fs[i].center));
+      if (d < 1e-6)
+        return { ok: false, why: 'overlap', msg: '折起来时第 ' + fs[i].label + ' 面和第 ' + fs[j].label + ' 面会重合' };
+      if (Math.abs(d - 1) < 1e-6) d1++;
+      else if (Math.abs(d - Math.SQRT1_2) < 1e-6) d2++;
+      else bad++;
+    }
+  }
+  // 立方体 6 个面心的距离谱：3 对相距 1（相对面）、12 对相距 √½（相邻面）
+  if (bad || d1 !== 3 || d2 !== 12)
+    return { ok: false, why: 'shape', msg: '这几个面折起来拼不成正方体（错位或差一个面）' };
+  return { ok: true, why: 'ok', msg: '✓ 能折成正方体' };
+}
+
+/* =========================================================================
+   2.6 印章图案：全部用「面内局部坐标」描述，所以会跟着纸张一起透视变形
+   ========================================================================= */
+function circlePts(cx, cy, r, n) {
+  const p = [];
+  for (let i = 0; i < (n || 20); i++) {
+    const a = i / (n || 20) * Math.PI * 2;
+    p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  return p;
+}
+function starPts(cx, cy, R, r) {
+  const p = [];
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / 5;
+    const rr = i % 2 ? r : R;
+    p.push([cx + rr * Math.cos(a), cy + rr * Math.sin(a)]);
+  }
+  return p;
+}
+const PIP_LAYOUT = {
+  1: [[.5, .5]],
+  2: [[.32, .32], [.68, .68]],
+  3: [[.3, .3], [.5, .5], [.7, .7]],
+  4: [[.32, .32], [.68, .32], [.32, .68], [.68, .68]],
+  5: [[.32, .32], [.68, .32], [.5, .5], [.32, .68], [.68, .68]],
+  6: [[.32, .26], [.68, .26], [.32, .5], [.68, .5], [.32, .74], [.68, .74]]
+};
+const STAMPS = [
+  { id: '○', shapes: [{ pts: circlePts(.5, .5, .22), closed: true }] },
+  { id: '△', shapes: [{ pts: [[.5, .28], [.72, .72], [.28, .72]], closed: true }] },
+  { id: '□', shapes: [{ pts: [[.3, .3], [.7, .3], [.7, .7], [.3, .7]], closed: true }] },
+  { id: '×', shapes: [{ pts: [[.3, .3], [.7, .7]] }, { pts: [[.3, .7], [.7, .3]] }] },
+  { id: '☆', shapes: [{ pts: starPts(.5, .5, .26, .11), closed: true }] },
+  { id: '↑', shapes: [{ pts: [[.5, .24], [.5, .76]] }, { pts: [[.5, .24], [.37, .44]] }, { pts: [[.5, .24], [.63, .44]] }] },
+  { id: '1', pips: 1 }, { id: '2', pips: 2 }, { id: '3', pips: 3 },
+  { id: '4', pips: 4 }, { id: '5', pips: 5 }, { id: '6', pips: 6 }
+];
+
+/**
+ * 以某个面为“基准面”重新生根：把折叠树改成以它为中心，
+ * 于是折叠时这个面完全不动，其余面绕着它折起来。
+ */
+function reroot(net, rootId) {
+  const key = (x, y) => x + ',' + y;
+  const index = new Map(net.cells.map((c, i) => [key(c.x, c.y), i]));
+  for (const nd of net.nodes) { nd.children = []; nd.fold = 0; }
+  const seen = new Set([rootId]);
+  const queue = [rootId];
+  while (queue.length) {
+    const i = queue.shift();
+    const { x, y } = net.cells[i];
+    for (const [dx, dy, dir] of [[0,1,'up'], [0,-1,'down'], [-1,0,'left'], [1,0,'right']]) {
+      const j = index.get(key(x + dx, y + dy));
+      if (j === undefined || seen.has(j)) continue;
+      seen.add(j);
+      queue.push(j);
+      net.nodes[i].children.push({ dir, node: net.nodes[j] });
+    }
+  }
+  net.root = net.nodes[rootId];
+  net.reached = seen.size;
+  return net;
+}
+
+/**
+ * 折叠到指定状态后的 6 个面。
+ * @param fold 数字 = 所有折痕同一角度；函数 node→角度 = 每条折痕独立
+ * @param dir  +1 / -1 折叠方向
+ * 返回面数组，额外带 .hinges（每条折痕的世界坐标端点与当前角度）
+ */
+function facesOf(net, fold, dir) {
+  const getDeg = typeof fold === 'function' ? fold : () => fold;
+  const out = [];
+  const hinges = [];
+  (function walk(node, X) {
+    out.push({
+      label: node.id + 1,
+      node, X,
+      pts: [[0,0,0], [1,0,0], [1,1,0], [0,1,0]].map(p => xf(X, p)),
+      center: xf(X, [0.5, 0.5, 0]),
+      // 纸的正面（印了编号、可以画画的那面）朝局部 -z，也就是默认镜头这一侧
+      normal: vnorm(mv(X.R, [0, 0, -1]))
+    });
+    for (const ch of node.children) {
+      const d = DIRS[ch.dir];
+      const deg = clamp(+getDeg(ch.node) || 0, -90, 90);
+      hinges.push({
+        id: ch.node.id,
+        label: ch.node.id + 1,
+        deg,
+        a: xf(X, d.edge[0]),
+        b: xf(X, d.edge[1])
+      });
+      const th = deg * DEG * dir;
+      let C = comp(X, TR(d.hinge));
+      C = comp(C, ROT(d.axis, d.sign * th));
+      C = comp(C, TR(vsub(d.off, d.hinge)));
+      walk(ch.node, C);
+    }
+  })(net.root, { R: I3.slice(), t: [0,0,0] });
+  out.hinges = hinges;
+  return out;
+}
+
+/** 折成正方体后，哪两个面是“相对面”（面心相距正好一条棱长，且只沿一个坐标轴） */
+function oppositeMap(net) {
+  const fs = facesOf(net, 90, 1);
+  const pairs = new Map();
+  for (let i = 0; i < fs.length; i++) {
+    for (let j = i + 1; j < fs.length; j++) {
+      const d = vsub(fs[j].center, fs[i].center);
+      const nz = d.map(Math.abs).filter(v => v > 1e-6);
+      if (nz.length === 1 && Math.abs(nz[0] - 1) < 1e-6) {
+        pairs.set(fs[i].label, fs[j].label);
+        pairs.set(fs[j].label, fs[i].label);
+      }
+    }
+  }
+  return pairs;
+}
+
+/* =========================================================================
+   3. 内置展开图（全部经数值验证：折到 90° 恰好拼成正方体）
+   ========================================================================= */
+const NETS = [
+  buildNet('十字形',  ['.#..', '####', '.#..']),
+  buildNet('错开',    ['...#', '####', '...#']),
+  buildNet('阶梯',    ['..#', '.##', '##.', '#..']),
+  buildNet('2-3-1',   ['..#.', '###.', '..##']),
+  buildNet('螺旋',    ['.#.', '.##', '##.', '.#.']),
+  buildNet('长条',    ['.#', '.#', '##', '#.', '#.'])
+];
+
+/* =========================================================================
+   4. 渲染与交互
+   ========================================================================= */
+function boot() {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+
+  let W = 1, H = 1, dpr = 1;
+  function syncSize() {
+    const w = cv.clientWidth || window.innerWidth;
+    const h = cv.clientHeight || window.innerHeight;
+    const d = Math.min(window.devicePixelRatio || 1, 2);
+    if (w !== W || h !== H || d !== dpr) {
+      W = w; H = h; dpr = d;
+      cv.width = Math.round(W * dpr);
+      cv.height = Math.round(H * dpr);
+    }
+  }
+
+  // dist 大 = 长焦：透视畸变小，转动时轮廓不会“一大一小”地晃，也更接近课本里的等测图
+  const CAM = { yaw: -0.62, pitch: 0.40, zoom: 1, fit: 1, fov: 2.05, dist: 10 };
+  const INK_COLORS = ['#22344a', '#c0392b', '#17795a', '#c87413', '#5b3a9b'];
+  const RX90 = rx(-Math.PI / 2);      // 把“基准面”放到水平位置（当桌面用）
+  const S = {
+    net: NETS[0],
+    dir: 1,                // +1: 折出来是纸正面朝外（印刷面在外面）；-1: 反向折叠
+    role: 'front',         // front = 基准面当作正面 / ground = 基准面当作地面
+    base: 0,               // 基准面的 node.id（这个面在折叠过程中完全不动）
+    showNum: true, showKnob: true, spin: false,
+    selected: -1,          // 选中的面（看相对面）
+    hinge: null,           // 选中的折痕（= 子面 node.id）；null = 全部联动
+    pairs: new Map(),
+    mode: 'view',          // view | brush | erase | stamp
+    color: INK_COLORS[0],
+    pen: 4,
+    pairColor: false,      // 三组相对面各涂一色
+    stamp: 0,              // 当前选中的印章（STAMPS 下标）
+    stampRot: 0,           // 印章旋转（0/90/180/270）
+    grid: null,            // 自定义展开图的格子集合
+    customOn: false,
+    netValid: true         // 当前这张图能不能折成正方体（不能时不许谈相对面/相邻面）
+  };
+  const PAIR_HUES = [28, 142, 285];   // 三组相对面的颜色
+
+  let tween = null, loop = false, holdUntil = 0;
+  let lastFaces = [], lastHinges = [], lastKnobs = [];
+  let pairOf = null;                 // 每帧：面编号 → 相对面组号（0..2）
+  let fitted = false;
+  let PX = 1;                       // 世界单位 → 屏幕像素（每帧更新）
+  let CX = 640, CY = 364;           // 可用绘图区中心（避开右侧/底部面板）
+  const undoStack = [];
+
+  /* ---------- 相机与投影 ---------- */
+  let MR = I3.slice();               // 模型摆正矩阵（由“基准面角色”决定）
+  let PIVOT = [0.5, 0.5, 0.5];       // 旋转轴心 = 模型包围盒中心（与视角无关）
+  let spinVel = null;                // 松手后的惯性
+  let camTween = null;               // 视角切换的补间
+
+  function toCam(p) {
+    // 以模型中心为轴心：这样转动时画面不会平移
+    let q = mv(MR, vsub(p, PIVOT));
+    q = mv(ry(CAM.yaw), q);
+    q = mv(rx(CAM.pitch), q);
+    return q;
+  }
+  function proj(p) {
+    const q = toCam(p);
+    const z = q[2] + CAM.dist;
+    return [CX + PX*(q[0]/z), CY - PX*(q[1]/z), z];
+  }
+
+  /* ---------- 配色 ---------- */
+  const LIGHT = vnorm([-0.45, 0.80, -0.55]);
+  function faceColors(n, facing) {
+    const d = Math.abs(vdot(n, LIGHT));
+    if (facing) {                                   // 纸的正面（暖白）
+      const l = 54 + 30 * d;
+      return { a: `hsl(38 36% ${l}%)`, b: `hsl(34 30% ${l - 9}%)`, ink: 'rgba(58,42,24,.82)' };
+    }
+    const l = 40 + 26 * d;                           // 纸的背面（冷灰蓝）
+    return { a: `hsl(203 24% ${l}%)`, b: `hsl(205 22% ${l - 8}%)`, ink: 'rgba(245,250,255,.9)' };
+  }
+
+  /* ---------- 绘制 ---------- */
+  function polyPath(p) {
+    ctx.beginPath();
+    ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
+    ctx.closePath();
+  }
+
+  function drawFace(f) {
+    const p = f.scr;
+    polyPath(p);
+    const sel = S.selected >= 0 && (f.label === S.selected ||
+      (S.netValid && S.pairs.get(S.selected) === f.label));
+    const facing = f.camNormal[2] < 0;
+    const col = faceColors(f.camNormal, facing);
+
+    const gi = pairOf ? pairOf.get(f.label) : -1;
+
+    if (sel) {
+      const d = Math.abs(vdot(f.camNormal, LIGHT));
+      ctx.fillStyle = `hsl(200 92% ${62 + 16 * d}%)`;
+      ctx.shadowColor = 'rgba(74,168,255,.85)';
+      ctx.shadowBlur = 22;
+    } else if (gi >= 0) {
+      const d = Math.abs(vdot(f.camNormal, LIGHT));
+      const h = PAIR_HUES[gi % 3];
+      const g = ctx.createLinearGradient(p[0][0], p[0][1], p[2][0], p[2][1]);
+      g.addColorStop(0, `hsl(${h} 62% ${58 + 20 * d}%)`);
+      g.addColorStop(1, `hsl(${h} 58% ${47 + 20 * d}%)`);
+      ctx.fillStyle = g;
+      ctx.shadowColor = 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = 8;
+    } else {
+      const g = ctx.createLinearGradient(p[0][0], p[0][1], p[2][0], p[2][1]);
+      g.addColorStop(0, col.a);
+      g.addColorStop(1, col.b);
+      ctx.fillStyle = g;
+      ctx.shadowColor = 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = 8;
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = facing ? 'rgba(120,95,60,.45)' : 'rgba(10,16,24,.45)';
+    ctx.stroke();
+
+    // 基准面：橙色虚线框（这个面在折叠时不动）
+    if (f.label === S.base + 1) {
+      const cx = (p[0][0] + p[1][0] + p[2][0] + p[3][0]) / 4;
+      const cy = (p[0][1] + p[1][1] + p[2][1] + p[3][1]) / 4;
+      ctx.save();
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = 'rgba(255,150,64,.95)';
+      ctx.beginPath();
+      p.forEach((q, i) => {
+        const x = cx + (q[0] - cx) * 0.9, y = cy + (q[1] - cy) * 0.9;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    drawInk(f, facing);
+    drawStamp(f, facing);
+
+    if (!S.showNum) return;
+    let area = 0;
+    for (let i = 0; i < 4; i++) {
+      const a = p[i], b = p[(i + 1) % 4];
+      area += a[0] * b[1] - b[0] * a[1];
+    }
+    area = Math.abs(area) / 2;
+    if (area < 60) return;
+    const size = clamp(Math.sqrt(area) * 0.30, 10, 26);
+    // 面中央有印章时，编号让到左上角，别和图案压在一起
+    const hasStamp = !!(S.net.stamps && S.net.stamps.has(f.label));
+    const anchor = hasStamp
+      ? proj(xf(f.X, [0.19, 0.81, 0]))
+      : [(p[0][0] + p[2][0]) / 2, (p[0][1] + p[2][1]) / 2];
+    ctx.font = `700 ${(hasStamp ? size * 0.78 : size).toFixed(1)}px "Segoe UI",system-ui,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = sel ? 'rgba(4,20,36,.9)' : col.ink;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(String(f.label), anchor[0], anchor[1]);
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- 印章 ---------- */
+  function drawStamp(f, facing) {
+    const st = S.net.stamps && S.net.stamps.get(f.label);
+    if (!st) return;
+    const sym = STAMPS[st.sym];
+    if (!sym) return;
+    const rad = (st.rot || 0) * Math.PI / 180;
+    const cs = Math.cos(rad), sn = Math.sin(rad);
+    const tf = pt => {
+      const du = pt[0] - 0.5, dv = pt[1] - 0.5;
+      return [0.5 + du * cs - dv * sn, 0.5 + du * sn + dv * cs];
+    };
+    const scr = pt => proj(xf(f.X, [pt[0], pt[1], 0]));
+    const ink = '#1d2b3a';
+    ctx.globalAlpha = facing ? 0.9 : 0.16;
+    ctx.fillStyle = ink;
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = Math.max(1, 0.032 * f.pxSize);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (sym.pips) {
+      for (const q of PIP_LAYOUT[sym.pips]) {
+        const c = scr(tf(q));
+        ctx.beginPath();
+        ctx.arc(c[0], c[1], Math.max(1, 0.058 * f.pxSize), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      for (const sh of sym.shapes) {
+        const pts = sh.pts.map(q => scr(tf(q)));
+        ctx.beginPath();
+        pts.forEach((c, i) => i ? ctx.lineTo(c[0], c[1]) : ctx.moveTo(c[0], c[1]));
+        if (sh.closed) { ctx.closePath(); ctx.fill(); }
+        else ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- 纸上的画 ---------- */
+  function drawInk(f, facing) {
+    const strokes = S.net.ink.get(f.label);
+    if (!strokes || !strokes.length) return;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const alpha = facing ? 0.94 : 0.18;      // 纸背面只透出一点墨色
+    for (const st of strokes) {
+      const pts = st.pts.map(pt => proj(xf(f.X, [pt[0], pt[1], 0])));
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = st.color;
+      ctx.fillStyle = st.color;
+      if (pts.length === 1) {
+        ctx.beginPath();
+        ctx.arc(pts[0][0], pts[0][1], Math.max(1, st.width * f.pxSize / 2), 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.lineWidth = Math.max(1, st.width * f.pxSize);
+        ctx.beginPath();
+        pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]));
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- 地面（基准面当桌面时，画出桌面网格 + 一点柔光） ---------- */
+  function drawGround() {
+    if (S.role !== 'ground') return;
+
+    // 柔光
+    const c = proj([0.5, 0.5, 0]);
+    const R = 1.7, ring = [];
+    for (let i = 0; i < 40; i++) {
+      const a = i / 40 * Math.PI * 2;
+      ring.push(proj([0.5 + R * Math.cos(a), 0.5 + R * Math.sin(a), 0]));
+    }
+    let rmax = 1;
+    for (const p of ring) rmax = Math.max(rmax, Math.hypot(p[0] - c[0], p[1] - c[1]));
+    const g = ctx.createRadialGradient(c[0], c[1], rmax * 0.08, c[0], c[1], rmax);
+    g.addColorStop(0, 'rgba(130,170,215,.16)');
+    g.addColorStop(1, 'rgba(130,170,215,0)');
+    ctx.beginPath();
+    ring.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+    ctx.closePath();
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // 网格（透视正确：每个端点都真投影）
+    ctx.save();
+    ctx.strokeStyle = 'rgba(140,175,215,.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let k = -3; k <= 5; k++) {
+      const t = k * 0.5;
+      const a1 = proj([t, -1.5, 0]), b1 = proj([t, 2.5, 0]);
+      const a2 = proj([-1.5, t, 0]), b2 = proj([2.5, t, 0]);
+      ctx.moveTo(a1[0], a1[1]); ctx.lineTo(b1[0], b1[1]);
+      ctx.moveTo(a2[0], a2[1]); ctx.lineTo(b2[0], b2[1]);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- 折痕手柄 ---------- */
+  // 把四边形向内收 d 像素，用于遮挡判断（手柄正好压在共用的棱上，不能算“在面内”）
+  function shrinkQuad(p, d) {
+    const cx = (p[0][0] + p[1][0] + p[2][0] + p[3][0]) / 4;
+    const cy = (p[0][1] + p[1][1] + p[2][1] + p[3][1]) / 4;
+    return p.map(q => {
+      const dx = q[0] - cx, dy = q[1] - cy, L = Math.hypot(dx, dy) || 1;
+      return [q[0] - dx / L * d, q[1] - dy / L * d];
+    });
+  }
+
+  function occluded(x, y, z) {
+    for (const f of lastFaces) {
+      if (f.depth > z - 0.08) continue;                 // 不比它近的面挡不住它
+      const area = Math.abs((f.scr[1][0] - f.scr[0][0]) * (f.scr[3][1] - f.scr[0][1]) -
+                            (f.scr[3][0] - f.scr[0][0]) * (f.scr[1][1] - f.scr[0][1])) / 2;
+      const d = Math.min(6, Math.sqrt(area) * 0.12);
+      if (inPoly(x, y, shrinkQuad(f.scr, d))) return true;
+    }
+    return false;
+  }
+
+  function drawHandles() {
+    lastKnobs = [];
+    if (!S.showKnob) return;
+    for (const h of lastHinges) {
+      const A = proj(h.a), B = proj(h.b);
+      const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, mz = (A[2] + B[2]) / 2;
+      if (occluded(mx, my, mz)) continue;
+
+      const sel = S.hinge === h.id;
+      const r = sel ? 10 : 7;
+      if (sel) {
+        ctx.beginPath();
+        ctx.moveTo(A[0], A[1]);
+        ctx.lineTo(B[0], B[1]);
+        ctx.strokeStyle = 'rgba(74,168,255,.95)';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(mx, my, r, 0, Math.PI * 2);
+      ctx.fillStyle = sel ? 'rgba(74,168,255,.95)' : 'rgba(18,26,36,.62)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.75)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.fillStyle = sel ? '#04121f' : 'rgba(255,255,255,.9)';
+      ctx.font = '600 9px "Segoe UI",system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(h.label), mx, my + 0.5);
+      lastKnobs.push({ id: h.id, x: mx, y: my, r: Math.max(r + 5, 13) });
+    }
+  }
+
+  /* ---------- 动画 ---------- */
+  function goTo(target, dur) {
+    const from = new Map();
+    for (const nd of S.net.nodes) if (nd !== S.net.root) from.set(nd.id, nd.fold);
+    tween = { from, to: target, only: S.hinge, t0: performance.now(), dur: dur || 760 };
+  }
+  const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+
+  /** 当前显示/驱动的角度：选中某条折痕就是它自己的角度，否则取所有折痕的平均值 */
+  function currentAngle() {
+    if (S.hinge != null) {
+      const nd = S.net.nodes.find(n => n.id === S.hinge);
+      return nd ? nd.fold : 0;
+    }
+    const kids = S.net.nodes.filter(n => n !== S.net.root);
+    if (!kids.length) return 0;
+    return kids.reduce((a, n) => a + n.fold, 0) / kids.length;
+  }
+
+  function stepAnim(now) {
+    if (tween) {
+      const t = clamp((now - tween.t0) / tween.dur, 0, 1);
+      const e = easeInOut(t);
+      for (const nd of S.net.nodes) {
+        if (nd === S.net.root) continue;
+        if (tween.only != null && nd.id !== tween.only) continue;
+        const f0 = tween.from.get(nd.id) || 0;
+        nd.fold = f0 + (tween.to - f0) * e;
+      }
+      if (t >= 1) { tween = null; if (loop) holdUntil = now + 420; }
+      syncFoldUI();
+    } else if (loop && now >= holdUntil) {
+      goTo(currentAngle() < 45 ? 90 : 0, 900);
+    }
+  }
+
+  /* ---------- 主循环 ---------- */
+  function render(now) {
+    syncSize();
+    stepAnim(now);
+    if (S.spin) CAM.yaw += 0.006;
+
+    // 松手后的惯性（指数衰减），拖动手感更顺
+    if (!drag && spinVel) {
+      CAM.yaw += spinVel.yaw;
+      const np = CAM.pitch + spinVel.pitch;
+      if (np >= 1.42 || np <= -1.42) spinVel.pitch = 0;
+      CAM.pitch = clamp(np, -1.42, 1.42);
+      spinVel.yaw *= 0.93;
+      spinVel.pitch *= 0.93;
+      if (Math.abs(spinVel.yaw) < 8e-4 && Math.abs(spinVel.pitch) < 8e-4) spinVel = null;
+    }
+    // 切视角时平滑过渡（不会“忽悠”一下跳过去）
+    if (camTween) {
+      const t = clamp((now - camTween.t0) / camTween.dur, 0, 1);
+      const e = easeInOut(t);
+      CAM.yaw = camTween.y0 + (camTween.y1 - camTween.y0) * e;
+      CAM.pitch = camTween.p0 + (camTween.p1 - camTween.p0) * e;
+      if (t >= 1) camTween = null;
+    } else {
+      CAM.yaw = wrapPi(CAM.yaw);       // 角度归一化，别让它无限累加
+    }
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (W < 4 || H < 4) return requestAnimationFrame(render);
+
+    const faces = facesOf(S.net, nd => nd.fold, S.dir);
+    lastHinges = faces.hinges;
+
+    // 可用绘图区：窄屏时面板在下方，宽屏时面板在右侧，纸不要躲到面板/标题底下
+    const narrow = W <= 760;
+    // 窄屏时面板是个底栏（最多占 54vh），底部要留够安全区，别让纸贴到面板上
+    const padT = 56;
+    const padR = narrow ? 10 : 300;
+    const padB = narrow ? Math.round(H * 0.56) + 14 : 24;
+    const viewW = Math.max(200, W - padR);
+    const viewH = Math.max(200, H - padT - padB);
+    CX = viewW / 2;
+    CY = padT + viewH / 2;
+
+    // 轴心与取景都用「与视角无关」的量：包围盒中心 + 外接球半径
+    // （否则转动时画面会一边漂一边缩放）
+    const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+    for (const f of faces) for (const p of f.pts) for (let k = 0; k < 3; k++) {
+      if (p[k] < mn[k]) mn[k] = p[k];
+      if (p[k] > mx[k]) mx[k] = p[k];
+    }
+    PIVOT = [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, (mn[2] + mx[2]) / 2];
+    let rad = 1e-6;
+    for (const f of faces) for (const p of f.pts) {
+      const d = vlen(vsub(p, PIVOT));
+      if (d > rad) rad = d;
+    }
+
+    const baseFit = CAM.fov * Math.min(W, H);
+    const wantFit = 0.50 * Math.min(viewW, viewH) * CAM.dist / rad / baseFit;
+    if (!fitted) { CAM.fit = wantFit; fitted = true; }
+    else CAM.fit += (wantFit - CAM.fit) * 0.14;
+    PX = baseFit * CAM.fit * CAM.zoom;
+
+    for (const f of faces) {
+      let n = mv(MR, f.normal);
+      n = mv(ry(CAM.yaw), n);
+      n = mv(rx(CAM.pitch), n);
+      f.camNormal = vnorm(n);
+      f.scr = f.pts.map(proj);
+      f.depth = (f.scr[0][2] + f.scr[1][2] + f.scr[2][2] + f.scr[3][2]) / 4;
+      f.pxSize = (Math.hypot(f.scr[1][0]-f.scr[0][0], f.scr[1][1]-f.scr[0][1]) +
+                  Math.hypot(f.scr[3][0]-f.scr[2][0], f.scr[3][1]-f.scr[2][1])) / 2;
+    }
+    faces.sort((a, b) => b.depth - a.depth);      // 远 → 近（画家算法）
+    lastFaces = faces;
+
+    pairOf = null;
+    if (S.pairColor && S.netValid && S.pairs.size === 6) {
+      pairOf = new Map();
+      let gi = 0;
+      for (const [a, b] of S.pairs) {
+        if (pairOf.has(a)) continue;
+        pairOf.set(a, gi); pairOf.set(b, gi); gi++;
+      }
+    }
+
+    if (S.role === 'ground') drawGround();      // 桌面投影画在纸下面
+    for (const f of faces) drawFace(f);
+    drawHandles();
+    requestAnimationFrame(render);
+  }
+
+  /* ---------- 视角切换 ---------- */
+  function tweenCam(yaw, pitch, dur) {
+    let y = yaw;
+    while (y - CAM.yaw > Math.PI) y -= Math.PI * 2;
+    while (CAM.yaw - y > Math.PI) y += Math.PI * 2;
+    camTween = { y0: CAM.yaw, p0: CAM.pitch, y1: y, p1: pitch, t0: performance.now(), dur: dur || 520 };
+    spinVel = null;
+  }
+
+  const VIEWS = [
+    { name: '正视', yaw: 0, pitch: 0 },
+    { name: '斜视', yaw: -0.62, pitch: 0.40 },
+    { name: '俯视', yaw: 0, pitch: 1.20 },
+    { name: '左', yaw: -Math.PI / 2, pitch: 0 },
+    { name: '右', yaw: Math.PI / 2, pitch: 0 },
+    { name: '后', yaw: Math.PI, pitch: 0 }
+  ];
+  const viewBox = $('views');
+  VIEWS.forEach(v => {
+    const b = document.createElement('button');
+    b.textContent = v.name;
+    b.addEventListener('click', () => tweenCam(v.yaw, v.pitch));
+    viewBox.appendChild(b);
+  });
+
+  /* ---------- 拾取 ---------- */
+  function inPoly(x, y, p) {
+    let inside = false;
+    for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+      const xi = p[i][0], yi = p[i][1], xj = p[j][0], yj = p[j][1];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+
+  function faceAt(x, y) {
+    for (let i = lastFaces.length - 1; i >= 0; i--) {
+      if (inPoly(x, y, lastFaces[i].scr)) return lastFaces[i];
+    }
+    return null;
+  }
+
+  function knobAt(x, y) {
+    for (let i = lastKnobs.length - 1; i >= 0; i--) {
+      const k = lastKnobs[i];
+      if (Math.hypot(x - k.x, y - k.y) <= k.r) return k;
+    }
+    return null;
+  }
+
+  /** 屏幕点 → 该面的局部坐标 (u,v)∈[0,1]²；无解返回 null */
+  function localAt(f, x, y) {
+    if (!f.Hi) {
+      const H = homography(f.scr);
+      f.Hi = H ? inv3(H) : null;
+    }
+    const M = f.Hi;
+    if (!M) return null;
+    const w = M[6]*x + M[7]*y + M[8];
+    if (!isFinite(w) || Math.abs(w) < 1e-9) return null;
+    return [(M[0]*x + M[1]*y + M[2]) / w, (M[3]*x + M[4]*y + M[5]) / w];
+  }
+
+  /* ---------- 绘画 ---------- */
+  let stroke = null, strokeLabel = 0, erasing = false;
+  const inUnit = uv => uv[0] > -0.02 && uv[0] < 1.02 && uv[1] > -0.02 && uv[1] < 1.02;
+  const penWidth = () => 0.004 + S.pen * 0.0055;   // 相对面宽
+
+  /** 改动笔迹/印章前先存一份快照，撤销时整体还原（笔迹和印章共用一套撤销） */
+  function pushUndo() {
+    undoStack.push({
+      net: S.net,
+      // 数组/对象要各复制一层：擦除是原地 splice，盖印是原地改 rot
+      ink: new Map([...S.net.ink].map(([k, v]) => [k, v.slice()])),
+      stamps: new Map([...S.net.stamps].map(([k, v]) => [k, { ...v }]))
+    });
+    if (undoStack.length > 30) undoStack.shift();
+  }
+
+  function beginStroke(x, y) {
+    const f = faceAt(x, y);
+    if (!f) return false;
+    const uv = localAt(f, x, y);
+    if (!uv || !inUnit(uv)) return false;
+    strokeLabel = f.label;
+    pushUndo();
+    if (S.mode === 'erase') { erasing = true; eraseAt(uv, S.net.ink.get(f.label) || []); return true; }
+    stroke = { color: S.color, width: penWidth(), pts: [uv] };
+    const list = S.net.ink.get(f.label) || [];
+    list.push(stroke);
+    S.net.ink.set(f.label, list);
+    return true;
+  }
+
+  function extendStroke(x, y) {
+    const f = lastFaces.find(face => face.label === strokeLabel);
+    if (!f) return;
+    const uv = localAt(f, x, y);
+    if (!uv || !inUnit(uv)) return;
+    if (erasing) { eraseAt(uv, S.net.ink.get(strokeLabel) || []); return; }
+    if (!stroke) return;
+    const last = stroke.pts[stroke.pts.length - 1];
+    if (Math.hypot(uv[0] - last[0], uv[1] - last[1]) < 0.004) return;
+    stroke.pts.push(uv);
+  }
+
+  function eraseAt(uv, list) {
+    const r = penWidth() * 1.6 + 0.02;
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (list[i].pts.some(p => Math.hypot(p[0] - uv[0], p[1] - uv[1]) <= r)) list.splice(i, 1);
+    }
+  }
+
+  /* ---------- UI ---------- */
+  function netSvg(net) {
+    const xs = net.cells.map(c => c.x), ys = net.cells.map(c => c.y);
+    const minx = Math.min(...xs), maxx = Math.max(...xs);
+    const miny = Math.min(...ys), maxy = Math.max(...ys);
+    const u = 11;
+    const w = (maxx - minx + 1) * u, h = (maxy - miny + 1) * u;
+    let rects = '';
+    for (const c of net.cells)
+      rects += `<rect x="${(c.x-minx)*u}" y="${(maxy-c.y)*u}" width="${u}" height="${u}"/>`;
+    return `<svg viewBox="-1 -1 ${w+2} ${h+2}" width="${w+2}" height="${h+2}">${rects}</svg>`;
+  }
+
+  const netBox = $('nets');
+  NETS.forEach((net, i) => {
+    const b = document.createElement('button');
+    b.className = 'netbtn' + (i === 0 ? ' on' : '');
+    b.title = net.name;
+    b.innerHTML = netSvg(net);
+    b.addEventListener('click', () => {
+      S.net = net;
+      reroot(net, 0);                     // 换图后基准面回到第 1 面
+      S.base = 0;
+      refreshPairs();
+      S.selected = -1;
+      S.hinge = null;
+      strokeLabel = 0;
+      $('netName').textContent = net.name;
+      [...netBox.children].forEach(el => el.classList.remove('on'));
+      b.classList.add('on');
+      S.customOn = false;
+      $('customBox').hidden = true;
+      tween = null; loop = false; setLoopUI();
+      syncFoldUI(); updateBaseUI(); updatePairUI(); updateTip();
+    });
+    netBox.appendChild(b);
+  });
+
+  const foldInput = $('fold'), angOut = $('ang'), foldLbl = $('foldLbl'), baseLbl = $('baseLbl');
+
+  function updateBaseUI() {
+    baseLbl.textContent = '第 ' + (S.base + 1) + ' 面 · ' + (S.role === 'ground' ? '地面' : '正面');
+  }
+
+  /** 换图（或改图）之后统一刷新：相对面配对 + 合法性 */
+  function refreshPairs() {
+    S.pairs = oppositeMap(S.net);
+    const v = validateNet(S.net);
+    S.netValid = v.ok;
+    return v;
+  }
+
+  /** 相对面结论（行测里最常用的那一步） */
+  function updatePairUI() {
+    const groups = [];
+    if (S.netValid && S.pairs.size === 6) {
+      const done = new Set();
+      for (const [a, b] of S.pairs) {
+        if (done.has(a)) continue;
+        done.add(a); done.add(b);
+        groups.push([a, b]);
+      }
+    }
+    $('pairLbl').textContent = groups.length === 3 ? '3 组' : '—';
+    $('pairHint').innerHTML = groups.length === 3
+      ? groups.map(([a, b], i) =>
+          '<span style="color:hsl(' + PAIR_HUES[i % 3] + ' 70% 60%)">●</span> ' + a + ' ↔ ' + b
+        ).join('　')
+      : (S.net.cells.length === 6 ? '这张图折不成正方体，没有相对面' : '需要 6 个面才能谈相对面');
+  }
+
+  /** 把某个面定为基准面并指定角色（正面 / 地面） */
+  function setBase(role, faceLabel) {
+    const id = faceLabel - 1;
+    if (!(id >= 0 && id < S.net.nodes.length)) {
+      flash('先在纸面上点一个面，再选它的角色');
+      return false;
+    }
+    const rootChanged = id !== S.base;
+    S.base = id;
+    if (rootChanged) {
+      reroot(S.net, id);              // 这个面变成折叠的固定基准
+      refreshPairs();
+      S.hinge = null;
+      tween = null; loop = false; setLoopUI();
+    }
+    S.role = role;
+    MR = role === 'ground' ? RX90 : I3.slice();
+    tweenCam(-0.62, role === 'ground' ? 0.72 : 0.40, 620);
+    syncFoldUI(); updateBaseUI(); updatePairUI(); updateTip();
+    return true;
+  }
+
+  $('baseFront').addEventListener('click', () => {
+    if (S.selected <= 0) { flash('先在纸面上点一个面'); return; }
+    setBase('front', S.selected);
+  });
+  $('baseGround').addEventListener('click', () => {
+    if (S.selected <= 0) { flash('先在纸面上点一个面'); return; }
+    setBase('ground', S.selected);
+  });
+
+  function syncFoldUI() {
+    const v = currentAngle();
+    foldInput.value = v.toFixed(1);
+    angOut.textContent = Math.round(v) + '°';
+    foldLbl.textContent = S.hinge == null ? '全部折痕' : ('第 ' + (S.hinge + 1) + ' 面这条');
+  }
+
+  foldInput.addEventListener('input', () => {
+    tween = null; loop = false; setLoopUI();
+    const v = +foldInput.value;
+    if (S.hinge == null) {
+      for (const nd of S.net.nodes) if (nd !== S.net.root) nd.fold = v;
+    } else {
+      const nd = S.net.nodes.find(n => n.id === S.hinge);
+      if (nd) nd.fold = v;
+    }
+    angOut.textContent = Math.round(v) + '°';
+  });
+
+  $('btnFlat').addEventListener('click', () => { loop = false; setLoopUI(); goTo(0, 620); });
+  $('btnCube').addEventListener('click', () => { loop = false; setLoopUI(); goTo(90, 820); });
+  $('btnAll').addEventListener('click', () => {
+    S.hinge = null;
+    syncFoldUI(); updateTip();
+  });
+
+  const playBtn = $('btnPlay');
+  function setLoopUI() { playBtn.textContent = loop ? '⏸ 停止播放' : '▶ 往复播放'; }
+  playBtn.addEventListener('click', () => {
+    loop = !loop;
+    if (loop) { tween = null; holdUntil = 0; }
+    setLoopUI();
+  });
+
+  /* 绘画面板 */
+  const swBox = $('swatches');
+  INK_COLORS.forEach((c, i) => {
+    const b = document.createElement('div');
+    b.className = 'sw' + (i === 0 ? ' on' : '');
+    b.style.background = c;
+    b.title = '颜色 ' + (i + 1);
+    b.addEventListener('click', () => {
+      S.color = c;
+      [...swBox.children].forEach(el => el.classList.remove('on'));
+      b.classList.add('on');
+      if (S.mode === 'view') setMode('brush');
+    });
+    swBox.appendChild(b);
+  });
+
+  function setMode(m) {
+    S.mode = m;
+    $('modeView').classList.toggle('on', m === 'view');
+    $('modeBrush').classList.toggle('on', m === 'brush');
+    $('modeErase').classList.toggle('on', m === 'erase');
+    $('modeStamp').classList.toggle('on', m === 'stamp');
+    $('modeLbl').textContent = { view: '浏览', brush: '画笔', erase: '橡皮', stamp: '印章' }[m];
+    $('stampBox').hidden = m !== 'stamp';
+    $('penBox').hidden = !(m === 'brush' || m === 'erase');
+    cv.classList.toggle('brush', m !== 'view');
+    updateTip();
+  }
+  $('modeView').addEventListener('click', () => setMode('view'));
+  $('modeBrush').addEventListener('click', () => setMode('brush'));
+  $('modeErase').addEventListener('click', () => setMode('erase'));
+  $('modeStamp').addEventListener('click', () => setMode('stamp'));
+  $('pen').addEventListener('input', e => { S.pen = +e.target.value; $('penVal').textContent = S.pen; });
+
+  /* 印章盘 */
+  const stampBox = $('stamps');
+  STAMPS.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'stampbtn' + (i === 0 ? ' on' : '');
+    b.textContent = s.id;
+    b.title = '印章 ' + s.id;
+    b.addEventListener('click', () => {
+      S.stamp = i;
+      [...stampBox.children].forEach(el => el.classList.remove('on'));
+      b.classList.add('on');
+      if (S.mode !== 'stamp') setMode('stamp');
+    });
+    stampBox.appendChild(b);
+  });
+
+  function stampFace(f) {
+    pushUndo();
+    const cur = S.net.stamps.get(f.label);
+    if (cur && cur.sym === S.stamp) S.net.stamps.delete(f.label);
+    else S.net.stamps.set(f.label, { sym: S.stamp, rot: S.stampRot });
+  }
+
+  /* 相对面着色 / 一键骰子 */
+  $('optPair').addEventListener('change', e => { S.pairColor = e.target.checked; });
+  $('btnDice').addEventListener('click', () => {
+    if (!S.netValid || S.pairs.size !== 6) { flash('这张展开图折不成正方体，没法标骰子'); return; }
+    const groups = [], done = new Set();
+    for (const [a, b] of S.pairs) {
+      if (done.has(a)) continue;
+      done.add(a); done.add(b);
+      groups.push([a, b]);
+    }
+    const vals = [[1, 6], [2, 5], [3, 4]];
+    S.net.stamps = new Map();
+    groups.forEach((g, i) => {
+      S.net.stamps.set(g[0], { sym: STAMPS.findIndex(s => s.pips === vals[i][0]), rot: 0 });
+      S.net.stamps.set(g[1], { sym: STAMPS.findIndex(s => s.pips === vals[i][1]), rot: 0 });
+    });
+    flash('已按「相对面点数和 = 7」把 1–6 点标好，可以直接折起来对照选项');
+  });
+
+  /* 自定义展开图 */
+  const GRID_W = 6, GRID_H = 5;
+  const gridBox = $('grid6');
+
+  function buildGridUI() {
+    gridBox.innerHTML = '';
+    for (let y = GRID_H - 1; y >= 0; y--) {
+      for (let x = 0; x < GRID_W; x++) {
+        const b = document.createElement('button');
+        b.className = 'cell';
+        b.dataset.k = x + ',' + y;
+        b.addEventListener('click', () => toggleCell(x, y));
+        gridBox.appendChild(b);
+      }
+    }
+    syncGridUI();
+  }
+
+  function syncGridUI() {
+    [...gridBox.children].forEach(b => b.classList.toggle('on', S.grid.has(b.dataset.k)));
+  }
+
+  function toggleCell(x, y) {
+    const k = x + ',' + y;
+    if (S.grid.has(k)) {
+      if (S.grid.size <= 1) return;
+      S.grid.delete(k);
+    } else {
+      if (S.grid.size >= 6) { flash('正方体的展开图正好 6 个面，先去掉一个再加'); return; }
+      S.grid.add(k);
+    }
+    rebuildCustom();
+  }
+
+  function rebuildCustom() {
+    const pts = [...S.grid].map(k => k.split(',').map(Number));
+    if (!pts.length) return;
+    const maxx = Math.max(...pts.map(p => p[0])), maxy = Math.max(...pts.map(p => p[1]));
+    const rows = [];
+    for (let y = maxy; y >= 0; y--) {
+      let r = '';
+      for (let x = 0; x <= maxx; x++) r += S.grid.has(x + ',' + y) ? '#' : '.';
+      rows.push(r);
+    }
+
+    // 换图时按格子位置把已经画的笔迹 / 印章搬过去
+    const oldInk = S.net.ink, oldSt = S.net.stamps;
+    const oldByCell = new Map(S.net.nodes.map(n => [n.cell.x + ',' + n.cell.y, n.id + 1]));
+    const net = buildNet('自定义', rows);
+    const newByCell = new Map(net.nodes.map(n => [n.cell.x + ',' + n.cell.y, n.id + 1]));
+    for (const [k, lbl] of oldByCell) {
+      const nl = newByCell.get(k);
+      if (nl === undefined) continue;
+      if (oldInk.has(lbl)) net.ink.set(nl, oldInk.get(lbl));
+      if (oldSt.has(lbl)) net.stamps.set(nl, oldSt.get(lbl));
+    }
+
+    S.net = net;
+    S.customOn = true;
+    S.base = 0; S.selected = -1; S.hinge = null;
+    reroot(net, 0);
+    refreshPairs();
+
+    const v = validateNet(net);
+    const st = $('netStatus');
+    st.textContent = v.msg;
+    st.className = 'status ' + (v.ok ? 'ok' : 'bad');
+    $('netName').textContent = '自定义';
+    [...netBox.children].forEach(el => el.classList.remove('on'));
+
+    tween = null; loop = false; setLoopUI();
+    syncGridUI(); syncFoldUI(); updateBaseUI(); updatePairUI(); updateTip();
+  }
+
+  $('btnCustom').addEventListener('click', () => {
+    const box = $('customBox');
+    if (!box.hidden) { box.hidden = true; return; }
+    const cells = S.net.cells;
+    const minx = Math.min(...cells.map(c => c.x)), miny = Math.min(...cells.map(c => c.y));
+    S.grid = new Set(cells.map(c => (c.x - minx) + ',' + (c.y - miny)));
+    box.hidden = false;
+    if (!gridBox.children.length) buildGridUI();
+    rebuildCustom();
+  });
+
+  $('btnUndo').addEventListener('click', () => {
+    const last = undoStack.pop();
+    if (!last) return;
+    last.net.ink = last.ink;
+    last.net.stamps = last.stamps;
+    updateTip();
+  });
+  $('btnClearFace').addEventListener('click', () => {
+    const label = S.selected > 0 ? S.selected : (strokeLabel || null);
+    if (!label) { flash('先点选一个面（浏览模式下点面），再清空'); return; }
+    pushUndo();
+    S.net.ink.delete(label);
+    S.net.stamps.delete(label);
+  });
+  $('btnClearAll').addEventListener('click', () => {
+    pushUndo();
+    S.net.ink.clear(); S.net.stamps.clear();
+  });
+
+  let flashTimer = 0;
+  function flash(msg) {
+    const t = $('tip');
+    t.innerHTML = msg;
+    t.style.borderColor = 'rgba(255,150,64,.6)';
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => {
+      t.style.borderColor = 'rgba(74,168,255,.18)';
+      updateTip();                       // 到点按当前状态重算，别恢复成旧文案
+    }, 1600);
+  }
+
+  $('btnReset').addEventListener('click', () => {
+    CAM.zoom = 1;
+    tweenCam(-0.62, 0.40);
+  });
+  $('optNum').addEventListener('change', e => { S.showNum = e.target.checked; });
+  $('optKnob').addEventListener('change', e => { S.showKnob = e.target.checked; });
+  $('optSpin').addEventListener('change', e => { S.spin = e.target.checked; });
+  $('optDir').addEventListener('change', e => { S.dir = e.target.checked ? -1 : 1; });
+
+  document.addEventListener('keydown', e => {
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'BUTTON' || tag === 'INPUT') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    if (e.key === 'ArrowRight') { loop = false; setLoopUI(); goTo(clamp(Math.round(currentAngle() / 10) * 10 + 10, 0, 90), 220); }
+    if (e.key === 'ArrowLeft')  { loop = false; setLoopUI(); goTo(clamp(Math.round(currentAngle() / 10) * 10 - 10, 0, 90), 220); }
+    if (e.key === 'b' || e.key === 'B') setMode('brush');
+    if (e.key === 'v' || e.key === 'V') setMode('view');
+    if (e.key === 'e' || e.key === 'E') setMode('erase');
+    if (e.key === 's' || e.key === 'S') setMode('stamp');
+    if (e.key >= '1' && e.key <= '6' && S.selected > 0) {
+      const idx = STAMPS.findIndex(s => s.pips === +e.key);
+      if (idx >= 0) S.net.stamps.set(S.selected, { sym: idx, rot: S.stampRot });
+    }
+  });
+
+  function updateTip() {
+    const t = $('tip');
+    if (S.mode === 'stamp') {
+      t.innerHTML = '印章：点纸面上的面就盖一个 <b>' + STAMPS[S.stamp].id + '</b>，再点一次取消。<br>' +
+        '右键面可把印章转 90°；也可以先选面再按数字键 1–6。';
+      return;
+    }
+    if (S.mode !== 'view') {
+      t.innerHTML = (S.mode === 'brush'
+        ? '画笔：在纸面上拖动即可涂画，在空白处拖动仍是旋转视角。'
+        : '橡皮：在纸面上拖动，擦掉碰到的笔画。') +
+        '<br>折起来看：画会跟着这张纸一起转（每张展开图各存一份画）。';
+      return;
+    }
+    if (S.hinge != null) {
+      t.innerHTML = `已单独选中<b>第 ${S.hinge + 1} 面这条折痕</b>，滑块只折这一条。<br>点“全部折痕”恢复联动。`;
+      return;
+    }
+    if (S.selected > 0) {
+      const isBase = S.selected === S.base + 1;
+      const baseHint = isBase
+        ? '<br>它现在是<b>基准面</b>（' + (S.role === 'ground' ? '地面' : '正面') + '），折叠时完全不动。'
+        : '<br>点“作为正面 / 作为地面”，可以让它当基准面。';
+      if (!S.netValid) {
+        t.innerHTML = `第 <b>${S.selected}</b> 面。这张图折不成正方体，所以谈不上相对面/相邻面。` + baseHint;
+        return;
+      }
+      const labels = S.net.nodes.map(n => n.id + 1);
+      const o = S.pairs.get(S.selected);
+      const near = labels.filter(l => l !== S.selected && l !== o);
+      t.innerHTML = `第 <b>${S.selected}</b> 面：相对面是第 <b>${o ?? '—'}</b> 面，相邻的 ${near.length} 个面是 ${near.join('、')}。` + baseHint;
+      return;
+    }
+    t.innerHTML = '点纸面上的圆点可<b>单独折这一条折痕</b>；点一个面看它的<b>相对面/相邻面</b>，也可以把它定为<b>基准面</b>。';
+  }
+
+  /* ---------- 指针交互 ---------- */
+  let drag = null, moved = false;
+  const pointers = new Map();        // 多指（双指缩放）
+  let pinchDist = 0;
+
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {        // 第二根手指按下 → 进入双指缩放，取消画笔/拖动
+      const [a, b] = [...pointers.values()];
+      pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      drag = null; stroke = null; erasing = false; spinVel = null;
+      return;
+    }
+    if (pointers.size > 2) return;
+    drag = { x: e.clientX, y: e.clientY };
+    moved = false;
+    spinVel = null;
+    camTween = null;
+    try { cv.setPointerCapture(e.pointerId); } catch (_) { /* 某些环境不支持指针捕获 */ }
+    cv.classList.add('grabbing');
+    if (S.mode === 'stamp') {
+      const f = faceAt(x, y);
+      if (f) { stampFace(f); drag = null; }
+    } else if (S.mode !== 'view' && beginStroke(x, y)) drag = null;   // 落在纸上 → 画；空白处 → 旋转
+  });
+
+  // 右键：把面上的印章转 90°
+  cv.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const r = cv.getBoundingClientRect();
+    const f = faceAt(e.clientX - r.left, e.clientY - r.top);
+    if (!f) return;
+    const cur = S.net.stamps.get(f.label);
+    if (!cur) return;
+    pushUndo();
+    cur.rot = ((cur.rot || 0) + 90) % 360;
+  });
+
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {                       // 双指缩放
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinchDist > 0 && d > 0) CAM.zoom = clamp(CAM.zoom * (d / pinchDist), 0.35, 4);
+      pinchDist = d;
+      return;
+    }
+    if (stroke || erasing) { extendStroke(x, y); return; }
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 3) moved = true;
+    CAM.yaw += dx * 0.008;
+    CAM.pitch = clamp(CAM.pitch + dy * 0.008, -1.42, 1.42);
+    spinVel = { yaw: dx * 0.008, pitch: dy * 0.008 };   // 记下最后的滑动速度做惯性
+    drag = { x: e.clientX, y: e.clientY };
+  });
+
+  cv.addEventListener('pointerup', e => {
+    cv.classList.remove('grabbing');
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinchDist = 0;
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (stroke || erasing) {
+      stroke = null; erasing = false; drag = null;
+      updateTip(); return;
+    }
+    if (drag && !moved) {
+      const k = knobAt(x, y);
+      if (k) {
+        S.hinge = (S.hinge === k.id) ? null : k.id;
+        syncFoldUI(); updateTip();
+      } else {
+        const f = faceAt(x, y);
+        S.selected = f ? (S.selected === f.label ? -1 : f.label) : -1;
+        updateTip();
+      }
+      spinVel = null;
+    } else if (spinVel && Math.hypot(spinVel.yaw, spinVel.pitch) < 0.004) {
+      spinVel = null;                                // 只是轻轻一动，不要惯性
+    }
+    drag = null;
+  });
+
+  cv.addEventListener('pointercancel', e => {
+    pointers.delete(e.pointerId);
+    pinchDist = 0;
+    drag = null; stroke = null; erasing = false;
+    cv.classList.remove('grabbing');
+  });
+  cv.addEventListener('wheel', e => {
+    e.preventDefault();
+    CAM.zoom = clamp(CAM.zoom * Math.exp(-e.deltaY * 0.0012), 0.35, 4);
+  }, { passive: false });
+
+  // 双击空白处复位视角
+  cv.addEventListener('dblclick', e => {
+    const r = cv.getBoundingClientRect();
+    if (faceAt(e.clientX - r.left, e.clientY - r.top)) return;
+    CAM.zoom = 1;
+    tweenCam(-0.62, 0.40);
+  });
+
+  /* 调试 / 自动化用（不影响正常使用） */
+  window.__cube = {
+    S, CAM, INK_COLORS, STAMPS, validateNet, VIEWS,
+    faces: () => lastFaces,
+    hinges: () => lastHinges,
+    knobs: () => lastKnobs,
+    local: (label, x, y) => {
+      const f = lastFaces.find(v => v.label === label);
+      return f ? localAt(f, x, y) : null;
+    },
+    at: (label, u, v) => {
+      const f = lastFaces.find(v2 => v2.label === label);
+      return f ? proj(xf(f.X, [u, v, 0])) : null;
+    },
+    px: () => PX,                      // 当前「世界单位→像素」比例（用来验证转动时不缩放）
+    setGrid: list => {                 // 直接给一个自定义展开图（调试/自动化用）
+      S.grid = new Set(list);
+      if (!gridBox.children.length) buildGridUI();
+      rebuildCustom();
+    },
+    setMode
+  };
+
+  refreshPairs();
+  setMode('view');
+  syncFoldUI();
+  updateBaseUI();
+  updatePairUI();
+  updateTip();
+  requestAnimationFrame(render);
+}
+
+if (typeof document !== 'undefined') boot();
+</script>
+</body>
+</html>
+
+
+

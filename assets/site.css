@@ -1,0 +1,95 @@
+/* 站点公共样式：与模拟器保持同一套深色视觉 */
+:root{
+  --bg0:#0b0e12; --bg1:#111721; --panel:rgba(22,27,34,.86);
+  --line:rgba(255,255,255,.09); --text:#e9eef5; --dim:#8fa0b3; --accent:#4aa8ff;
+  --paper:#f0e8d6;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(900px 700px at 62% -10%,#1d2735 0%,var(--bg1) 48%,var(--bg0) 100%);
+  background-attachment:fixed;
+  color:var(--text);
+  font:15px/1.7 "Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px}
+
+/* --- 顶部 --- */
+.top{padding:34px 0 0}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.06em;color:var(--dim)}
+.brand svg{display:block}
+.top nav{display:flex;gap:18px;font-size:13.5px}
+
+/* --- 首屏 --- */
+.hero{padding:64px 0 40px}
+.hero h1{
+  margin:0 0 18px;
+  font-size:clamp(28px,5vw,44px);
+  line-height:1.24;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p.lead{margin:0 0 12px;font-size:clamp(15px,2.2vw,17.5px);color:#c3cedc;max-width:38em}
+.hero p.note{margin:0 0 30px;font-size:13.5px;color:var(--dim)}
+
+.cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  height:44px;padding:0 22px;border-radius:12px;
+  font-size:14.5px;font-weight:600;border:1px solid var(--line);
+  background:rgba(255,255,255,.05);color:var(--text);
+  transition:transform .15s,background .15s,border-color .15s;
+}
+.btn:hover{text-decoration:none;background:rgba(255,255,255,.1);transform:translateY(-1px)}
+.btn.primary{
+  background:linear-gradient(180deg,#4aa8ff,#2b84dd);color:#06121f;border-color:transparent;
+  box-shadow:0 10px 26px rgba(74,168,255,.28);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#5bb2ff,#3189e0)}
+
+/* --- 通用区块 --- */
+section{padding:34px 0}
+h2{
+  margin:0 0 6px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);font-weight:600;
+}
+h2 + p.sub{margin:0 0 24px;color:var(--dim);font-size:13.5px}
+
+/* --- 特性卡片 --- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{
+  padding:18px;border-radius:16px;background:var(--panel);
+  border:1px solid var(--line);backdrop-filter:blur(10px);
+}
+.card h3{margin:0 0 7px;font-size:15px;font-weight:600}
+.card p{margin:0;font-size:13.5px;color:#aebbca}
+
+/* --- 操作表 --- */
+.ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px 26px;
+  padding:16px 20px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.ops div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.055);font-size:13.5px}
+.ops div span:first-child{color:var(--dim)}
+.ops div span:last-child{text-align:right}
+
+/* --- 页脚 --- */
+footer{margin-top:40px;padding:26px 0 44px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--dim)}
+footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+/* --- 404 --- */
+.center{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px}
+.center .code{font-size:clamp(56px,14vw,104px);font-weight:700;line-height:1;
+  color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.22);letter-spacing:.04em}
+
+@media (max-width:560px){
+  .hero{padding:40px 0 28px}
+  .top nav{display:none}
+}
