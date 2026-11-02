@@ -5,7 +5,7 @@
   --paper:#f0e8d6;
 }
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{
   margin:0;
   min-height:100vh;
@@ -16,52 +16,72 @@ body{
 }
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
-.wrap{max-width:900px;margin:0 auto;padding:0 24px}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
 
 /* --- 顶部 --- */
-.top{padding:34px 0 0}
+.top{padding:30px 0 0}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.06em;color:var(--dim)}
-.brand svg{display:block}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.06em;color:var(--text)}
+.brand:hover{text-decoration:none;color:#fff}
+.brand svg{display:block;flex:none}
 .top nav{display:flex;gap:18px;font-size:13.5px}
 
 /* --- 首屏 --- */
-.hero{padding:64px 0 40px}
+.hero{padding:56px 0 30px}
 .hero h1{
-  margin:0 0 18px;
-  font-size:clamp(28px,5vw,44px);
-  line-height:1.24;
+  margin:0 0 14px;
+  font-size:clamp(26px,4.6vw,38px);
+  line-height:1.28;
   font-weight:700;
   letter-spacing:.01em;
 }
 .hero h1 em{font-style:normal;color:var(--accent)}
-.hero p.lead{margin:0 0 12px;font-size:clamp(15px,2.2vw,17.5px);color:#c3cedc;max-width:38em}
-.hero p.note{margin:0 0 30px;font-size:13.5px;color:var(--dim)}
-
-.cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.btn{
-  display:inline-flex;align-items:center;gap:8px;
-  height:44px;padding:0 22px;border-radius:12px;
-  font-size:14.5px;font-weight:600;border:1px solid var(--line);
-  background:rgba(255,255,255,.05);color:var(--text);
-  transition:transform .15s,background .15s,border-color .15s;
-}
-.btn:hover{text-decoration:none;background:rgba(255,255,255,.1);transform:translateY(-1px)}
-.btn.primary{
-  background:linear-gradient(180deg,#4aa8ff,#2b84dd);color:#06121f;border-color:transparent;
-  box-shadow:0 10px 26px rgba(74,168,255,.28);
-}
-.btn.primary:hover{background:linear-gradient(180deg,#5bb2ff,#3189e0)}
+.hero p.lead{margin:0;font-size:clamp(14.5px,2vw,16.5px);color:#c3cedc;max-width:38em}
 
 /* --- 通用区块 --- */
-section{padding:34px 0}
+section{padding:26px 0}
 h2{
-  margin:0 0 6px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+  margin:0 0 6px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--accent);font-weight:600;
 }
-h2 + p.sub{margin:0 0 24px;color:var(--dim);font-size:13.5px}
+h2 + p.sub{margin:0 0 22px;color:var(--dim);font-size:13.5px}
 
-/* --- 特性卡片 --- */
+/* --- 工具入口卡片 --- */
+.toolgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.tool{
+  display:flex;gap:16px;padding:20px;
+  border-radius:18px;border:1px solid var(--line);
+  background:var(--panel);backdrop-filter:blur(10px);
+  color:var(--text);
+  transition:transform .16s,border-color .16s,background .16s,box-shadow .16s;
+}
+a.tool:hover{
+  text-decoration:none;
+  transform:translateY(-2px);
+  border-color:rgba(74,168,255,.55);
+  background:rgba(28,36,46,.92);
+  box-shadow:0 16px 38px rgba(0,0,0,.42);
+}
+.tool .ico{
+  flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
+  background:rgba(74,168,255,.12);border:1px solid rgba(74,168,255,.28);
+}
+.tool .meta{display:block;min-width:0}
+.tool .tag{
+  display:inline-block;margin:0 0 8px;padding:1px 8px;border-radius:999px;
+  font-size:11.5px;letter-spacing:.04em;color:#9fc6f5;
+  background:rgba(74,168,255,.12);border:1px solid rgba(74,168,255,.25);
+}
+.tool h3{margin:0 0 6px;font-size:16.5px;font-weight:600;line-height:1.4}
+.tool p{margin:0 0 10px;font-size:13.5px;color:#aebbca}
+.tool .go{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--accent)}
+.tool.soon{border-style:dashed;background:rgba(255,255,255,.025);opacity:.75}
+.tool.soon .ico{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12);color:var(--dim);font-size:22px}
+.tool.soon h3{color:#c3cedc;font-weight:600;font-size:15.5px}
+.tool.soon p{color:var(--dim);margin:0}
+
+/* --- 特性卡片（工具详情页） --- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .card{
   padding:18px;border-radius:16px;background:var(--panel);
@@ -78,8 +98,32 @@ h2 + p.sub{margin:0 0 24px;color:var(--dim);font-size:13.5px}
 .ops div span:first-child{color:var(--dim)}
 .ops div span:last-child{text-align:right}
 
+/* --- 正文段落 --- */
+.prose{max-width:42em;color:#aebbca;font-size:14px;margin:0 0 14px}
+.prose + .prose{margin-top:0}
+
+/* --- 按钮 --- */
+.cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  height:44px;padding:0 22px;border-radius:12px;
+  font-size:14.5px;font-weight:600;border:1px solid var(--line);
+  background:rgba(255,255,255,.05);color:var(--text);
+  transition:transform .15s,background .15s,border-color .15s;
+}
+.btn:hover{text-decoration:none;background:rgba(255,255,255,.1);transform:translateY(-1px)}
+.btn.primary{
+  background:linear-gradient(180deg,#4aa8ff,#2b84dd);color:#06121f;border-color:transparent;
+  box-shadow:0 10px 26px rgba(74,168,255,.28);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#5bb2ff,#3189e0)}
+
+/* --- 面包屑 --- */
+.crumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--dim);padding:26px 0 0}
+.crumb .sep{opacity:.5}
+
 /* --- 页脚 --- */
-footer{margin-top:40px;padding:26px 0 44px;border-top:1px solid var(--line);
+footer{margin-top:36px;padding:24px 0 44px;border-top:1px solid var(--line);
   font-size:13px;color:var(--dim)}
 footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 
@@ -90,6 +134,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.22);letter-spacing:.04em}
 
 @media (max-width:560px){
-  .hero{padding:40px 0 28px}
+  .hero{padding:36px 0 20px}
   .top nav{display:none}
+  .tool{flex-direction:column;gap:12px}
 }
