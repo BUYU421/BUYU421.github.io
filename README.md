@@ -1,8 +1,8 @@
-# 正方体折纸模拟器
+﻿# 正方体折纸模拟器
 
 一个纯前端的立方体折纸（展开图折叠）模拟器，静态托管于 GitHub Pages。
 
-**在线访问：** https://buyu.github.io/
+**在线访问：** https://buyu421.github.io/
 
 ## 站点结构
 
