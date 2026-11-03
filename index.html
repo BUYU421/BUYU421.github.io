@@ -2,98 +2,32 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>在线工具集 · 正方体折纸模拟器</title>
-<meta name="description" content="打开即用的在线小工具合集。目前收录：正方体折纸模拟器 —— 6 种展开图与自定义网格，逐条折痕连续折叠，标注相对面，支持画笔与印章，无需安装。">
-<meta name="theme-color" content="#0b0e12">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e12'/%3E%3Cpath d='M16 5l9 5.2v10.4L16 26l-9-5.4V10.2z' fill='none' stroke='%234aa8ff' stroke-width='1.8'/%3E%3Cpath d='M16 15.6l9-5.4M16 15.6v10.4M16 15.6L7 10.2' fill='none' stroke='%234aa8ff' stroke-width='1.4' opacity='.65'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/site.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>资源站</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/assets/site.css">
 </head>
-<body>
-
-<header class="top">
-  <div class="wrap">
-    <a class="brand" href="./">
-      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M16 4l10 5.8v11.9L16 28 6 21.7V9.8z" fill="none" stroke="#4aa8ff" stroke-width="1.8"/>
-        <path d="M16 15.4l10-5.6M16 15.4V28M16 15.4L6 9.8" fill="none" stroke="#4aa8ff" stroke-width="1.3" opacity=".6"/>
-      </svg>
-      <span>在线工具集</span>
-    </a>
-    <nav>
-      <a href="#tools">工具</a>
-      <a href="#about">关于</a>
-      <a href="https://github.com/BUYU421/BUYU421.github.io" target="_blank" rel="noopener">GitHub</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-  <section class="hero">
-    <div class="wrap">
-      <h1>打开就能用的<em>小工具</em></h1>
-      <p class="lead">全部在浏览器里运行，不用安装、不用登录，断网也能用。点下面任意一张卡片进入对应的工具。</p>
+<body class="gate">
+<main class="gate-card">
+  <p class="site">资源站</p>
+  <h1>需要登录</h1>
+  <p class="hint">这个页面已加密，输入账号与密码后解密显示。</p>
+  <form id="gateForm" autocomplete="on">
+    <div class="field">
+      <label for="u">账号</label>
+      <input id="u" name="user" autocapitalize="off" autocorrect="off" spellcheck="false">
     </div>
-  </section>
-
-  <section id="tools">
-    <div class="wrap">
-      <h2>Tools</h2>
-      <p class="sub">目前收录 1 个工具，后续会陆续加入。</p>
-
-      <div class="toolgrid">
-
-        <!-- 新增工具：复制这个 a.tool 整块，改 href、图标、标签、标题、描述即可 -->
-        <a class="tool" href="simulator/">
-          <div class="ico" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 32 32">
-              <path d="M16 4l10 5.8v11.9L16 28 6 21.7V9.8z" fill="none" stroke="#4aa8ff" stroke-width="1.7"/>
-              <path d="M16 15.4l10-5.6M16 15.4V28M16 15.4L6 9.8" fill="none" stroke="#4aa8ff" stroke-width="1.2" opacity=".55"/>
-            </svg>
-          </div>
-          <div class="meta">
-            <span class="tag">几何 · 数学</span>
-            <h3>正方体折纸模拟器</h3>
-            <p>拖动角度滑杆，看一张平面展开图沿着折痕一根根立起来，折成正方体。可以只折其中一条，也能在纸面上作画、盖章。</p>
-            <span class="go">打开模拟器 →</span>
-          </div>
-        </a>
-
-        <div class="tool soon">
-          <div class="ico" aria-hidden="true">+</div>
-          <div class="meta">
-            <h3>更多工具开发中</h3>
-            <p>新的小工具做好后会加进这张列表，仍然是一点就进。</p>
-          </div>
-        </div>
-
-      </div>
+    <div class="field">
+      <label for="p">密码</label>
+      <input id="p" name="pass" type="password">
     </div>
-  </section>
-
-  <section id="about">
-    <div class="wrap">
-      <h2>About</h2>
-      <p class="sub">关于这个站点和里面每个工具。</p>
-      <p class="prose">
-        这里的每个工具都是单个 HTML 文件写成的：HTML、CSS、JavaScript 全部内联，
-        不依赖任何第三方库，也没有后端和埋点。所以它们很轻，双击就能在本地打开。
-      </p>
-      <p class="prose">
-        第一个工具的功能细节和操作说明见
-        <a href="simulator/about.html">《正方体折纸模拟器》功能与操作</a>；
-        源码放在 <a href="https://github.com/BUYU421/BUYU421.github.io" target="_blank" rel="noopener">GitHub</a>，欢迎提 issue。
-      </p>
-    </div>
-  </section>
+    <button id="go" type="submit">登录</button>
+    <p class="gate-msg" id="msg" role="status" aria-live="polite"></p>
+  </form>
+  <p class="gate-foot">页面内容是加密的，没有正确密码无法解开；密码没有保存在任何地方。</p>
 </main>
-
-<footer>
-  <div class="wrap">
-    <span>在线工具集 · 静态托管于 GitHub Pages</span>
-    <span><a href="simulator/">直接打开折纸模拟器</a></span>
-  </div>
-</footer>
-
+<script>window.__ENC={"v":1,"kdf":"PBKDF2-SHA256","iter":600000,"salt":"v7IP28+IvsRWfWuXKIeX1A==","iv":"DGlZFGBYoIkBOCHv","data":"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"};</script>
+<script src="/assets/gate.js"></script>
 </body>
 </html>
